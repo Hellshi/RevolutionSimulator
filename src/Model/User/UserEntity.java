@@ -17,6 +17,11 @@ public class UserEntity extends BaseEntity<UserEntity> implements IUser {
         this.setRole(role);
     }
 
+    public String getId() { return id; }
+    public double getSalary() { return salary; }
+    public String getName() { return name; }
+    public Role getRole() { return role; }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -31,5 +36,30 @@ public class UserEntity extends BaseEntity<UserEntity> implements IUser {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public static UserEntity fromJson(String json) {
+        UserEntity user = new UserEntity();
+        try {
+            // Remove chaves e espaços extras
+            String content = json.replace("{", "").replace("}", "").trim();
+            String[] pairs = content.split(",");
+
+            for (String pair : pairs) {
+                String[] parts = pair.split(":");
+                String key = parts[0].trim().replace("\"", "");
+                String value = parts.length > 1 ? parts[1].trim().replace("\"", "") : "";
+
+                switch (key) {
+                    case "name": user.setName(value); break;
+                    case "salary": user.setSalary(Double.parseDouble(value)); break;
+                    case "role": user.setRole(Role.fromString(value)); break;
+                    case "id": user.setId(value.equals("null") ? null : value); break;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao converter JSON para UserEntity: " + e.getMessage());
+        }
+        return user;
     }
 }

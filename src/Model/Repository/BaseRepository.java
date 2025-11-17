@@ -1,22 +1,27 @@
 package Model.Repository;
 
 import Model.Data.Storage;
-
+import java.lang.reflect.Field;
 import java.util.Map;
 
 public class BaseRepository<T> {
     private final Storage storage;
     private int nextId = 1;
 
-
     public BaseRepository(Storage storage) {
         this.storage = storage;
+        // Atualiza o nextId baseado no último ID salvo no arquivo
+        this.nextId = storage.getAll().keySet().stream()
+                .max(Integer::compare)
+                .orElse(0) + 1;
     }
 
     public String create(BaseEntity<T> record) {
         int id = nextId++;
-        String jsonRecord = record.toString();
 
+        setIdViaReflection(record, String.valueOf(id));
+
+        String jsonRecord = record.toString();
         storage.put(id, jsonRecord);
 
         return jsonRecord;
@@ -27,12 +32,8 @@ public class BaseRepository<T> {
     }
 
     public boolean update(int id, String newJsonRecord) {
-        if (!storage.contains(id)) {
-            return false;
-        }
-
+        if (!storage.contains(id)) return false;
         storage.put(id, newJsonRecord);
-
         return true;
     }
 
@@ -40,22 +41,32 @@ public class BaseRepository<T> {
         return storage.remove(id);
     }
 
-    public String listAll() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
+    protected Map<Integer, String> readAllRaw() {
+        return storage.getAll();
+    }
 
-        boolean first = true;
-        for (Map.Entry<Integer, String> entry : storage.getAll().entrySet()) {
-            if (!first) sb.append(", ");
-            first = false;
+    private void setIdViaReflection(Object entity, String idValue) {
+        try {
+            Field field = null;
+            Class<?> clazz = entity.getClass();
+            while (clazz != null && field == null) {
+                try {
+                    field = clazz.getDeclaredField("id");
+                } catch (NoSuchFieldException e) {
+                    clazz = clazz.getSuperclass();
+                }
+            }
 
-            sb.append("\"")
-                    .append(entry.getKey())
-                    .append("\": ")
-                    .append(entry.getValue());
+            if (field != null) {
+                field.setAccessible(true);
+                field.set(entity, idValue);
+            }
+        } catch (Exception e) {
+            System.out.println("Aviso: Não foi possível setar o ID via reflection: " + e.getMessage());
         }
+    }
 
-        sb.append("}");
-        return sb.toString();
+    public String listAll() {
+        return storage.getAll().toString();
     }
 }
