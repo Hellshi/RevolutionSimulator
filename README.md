@@ -1,4 +1,6 @@
 # 👥 Sistema de Gerenciamento de Usuários (JavaFX + MVC)
+Diagrama de Classes
+<img width="2951" height="2032" alt="UpdatedDiagram drawio" src="https://github.com/user-attachments/assets/e2a428ea-7f2b-4041-9161-eb2961e0af87" />
 
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)
 ![JavaFX](https://img.shields.io/badge/JavaFX-25.0.1-blue?style=for-the-badge)
